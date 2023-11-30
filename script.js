@@ -3,8 +3,6 @@
 const btn = document.querySelector('.btn-country');
 const countriesContainer = document.querySelector('.countries');
 // const neighbour = document.getComputedStyle(neighbour);
-
-///////////////////////////////////////
 const renderCountry = function (data, className = '') {
   const html = `<article class="country"${className}>
 <img class="country__img" src="${data.flag}" />
@@ -20,49 +18,103 @@ const renderCountry = function (data, className = '') {
 </article>`;
 
   countriesContainer.insertAdjacentHTML('beforeend', html);
-  countriesContainer.style.opacity = 1;
+  // countriesContainer.style.opacity = 1;
 };
 
-const getCountryAndNeighbour = function (country) {
-  const request = new XMLHttpRequest();
-  request.open('GET', `https://restcountries.com/v2/name/${country}`);
-  request.send();
+const renderError = function (msg) {
+  countriesContainer.insertAdjacentText('beforeend', msg);
+  // countriesContainer.style.opacity = 1;
+};
 
-  request.addEventListener('load', function () {
-    const [data] = JSON.parse(this.responseText);
-    console.log(data);
+///////////////////////////////////////
 
-    //Render country
-    renderCountry(data);
-    //Get neighbour country
+// const getCountryAndNeighbour = function (country) {
+//   const request = new XMLHttpRequest();
+//   request.open('GET', `https://restcountries.com/v2/name/${country}`);
+//   request.send();
 
-    const neighbour = data.borders?.[0];
-    if (!neighbour) return;
+//   request.addEventListener('load', function () {
+//     const [data] = JSON.parse(this.responseText);
+//     console.log(data);
 
-    //AJAX call country
-    const request2 = new XMLHttpRequest();
-    request2.open('GET', `https://restcountries.com/v2/name/${neighbour}`);
-    request2.send();
+//     //Render country
+//     renderCountry(data);
+//     //Get neighbour country
 
-    request2.addEventListener('load', function () {
-      const [data2] = JSON.parse(this.responseText);
-      console.log(data2);
-      renderCountry(data2, 'neighbour');
+//     const neighbour = data.borders?.[0];
+//     if (!neighbour) return;
+
+//     //AJAX call country
+//     const request2 = new XMLHttpRequest();
+//     request2.open('GET', `https://restcountries.com/v2/name/${neighbour}`);
+//     request2.send();
+
+//     request2.addEventListener('load', function () {
+//       const [data2] = JSON.parse(this.responseText);
+//       console.log(data2);
+//       renderCountry(data2, 'neighbour');
+//     });
+//   });
+// };
+// getCountryAndNeighbour('portugal');
+
+// //callback: when we use lots of callbacks in order to get asynchronous task sequentially
+// setTimeout(() => {
+//   console.log('one second');
+//   setTimeout(() => {
+//     console.log('1 second');
+//     setTimeout(() => {
+//       console.log('one second');
+//       setTimeout(() => {
+//         console.log('1 second');
+//       }, 1000);
+//     }, 1000);
+//   }, 1000);
+// }, 1000);
+
+//How Promise works: Fetch API
+// const request2 = new XMLHttpRequest();
+// request2.open('GET', `https://restcountries.com/v2/name/${neighbour}`);
+// request2.send();
+
+// const getCountryData = function (country) {
+//   fetch(`https://restcountries.com/v2/name/${country}`)
+//     .then(function (response) {
+//       console.log(response);
+//       //to read the body data we need to call json object on response
+//       return response.json();
+//     })
+//     .then(function (data) {
+//       console.log(data);
+//       renderCountry(data[0]);
+//     });
+// };
+
+// getCountryData('portugal');
+
+//Chaining promise for two ajax call
+
+const getCountryData = function (country) {
+  fetch(`https://restcountries.com/v2/name/${country}`)
+    .then(response => response.json())
+    .then(data => {
+      renderCountry(data[0]);
+      const neighbour = data[0].borders?.[0];
+      if (!neighbour) return;
+      //Country2
+      return fetch(`https://restcountries.com/v2/alpha/${neighbour}`);
+    })
+    .then(response => response.json())
+    .then(data => renderCountry(data, 'neighbour'))
+    .catch(err => {
+      console.log(`${err} ✳✳✳`);
+      renderError(`Something went wrong ✳✳✳ ${err.message} `);
+    })
+    .finally(function () {
+      countriesContainer.style.opacity = 1;
     });
-  });
 };
-getCountryAndNeighbour('portugal');
 
-//callback: when we use lots of callbacks in order to get asynchronous task sequentially
-setTimeout(() => {
-  console.log('one second');
-  setTimeout(() => {
-    console.log('1 second');
-    setTimeout(() => {
-      console.log('one second');
-      setTimeout(() => {
-        console.log('1 second');
-      }, 1000);
-    }, 1000);
-  }, 1000);
-}, 1000);
+btn.addEventListener('click', function () {
+  getCountryData('usfff');
+});
